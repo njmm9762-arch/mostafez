@@ -5,38 +5,43 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PMGC | البطولة الرسمية</title>
 <style>
-*{box-sizing:border-box;font-family:'Cairo',sans-serif}
-body{margin:0;background:#000;color:#fff;overflow-x:hidden}
+*{box-sizing:border-box;font-family:'Cairo',sans-serif;margin:0;padding:0}
+body{background:#000;color:#fff;overflow-x:hidden}
 video.bg{position:fixed;inset:0;width:100%;height:100%;object-fit:cover;z-index:-3}
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:-2}
 .fire{position:fixed;bottom:0;left:0;width:100%;height:150px;background:url("https://i.imgur.com/8Qf4JQF.gif") repeat-x;opacity:.8;z-index:2;pointer-events:none}
-.container{max-width:430px;margin:20px auto;padding:20px;background:linear-gradient(180deg,rgba(20,20,20,.9),rgba(0,0,0,.9));border-radius:25px;border:2px solid #ff4500;box-shadow:0 0 25px #ff4500,0 0 60px #ff000044;animation:zoom 1s ease}
+.container{max-width:430px;margin:20px auto;padding:20px;background:linear-gradient(180deg,rgba(20,20,20,.95),rgba(0,0,0,.95));border-radius:25px;border:2px solid #ff4500;box-shadow:0 0 30px #ff4500,0 0 80px #ff0000;animation:zoom 1s ease}
 @keyframes zoom{from{transform:scale(.9);opacity:0}to{transform:scale(1);opacity:1}}
-h1{text-align:center;font-size:32px;color:#ffae00;text-shadow:0 0 10px #ff4500,0 0 30px #ff0000}
-input,select,button{width:100%;padding:12px;margin:6px 0;border-radius:12px;border:none;font-size:15px}
-input,select{background:#0d0d0d;color:#fff;border:1px solid #ff4500}
+h1{text-align:center;font-size:32px;color:#ffae00;text-shadow:0 0 10px #ff4500,0 0 30px #ff0000;margin-bottom:20px}
+input,select,button,textarea{width:100%;padding:12px;margin:8px 0;border-radius:12px;border:none;font-size:15px}
+input,select,textarea{background:#111;color:#fff;border:1px solid #ff4500}
 button{background:linear-gradient(135deg,#ff4500,#ffae00);font-weight:900;color:#000;cursor:pointer;transition:.3s}
 button:hover{transform:scale(1.05)}
 .page{display:none}
 .card{border:1px solid #ff4500;border-radius:15px;padding:12px;margin:10px 0;background:rgba(255,69,0,.08)}
 .first{color:#ffd700;text-shadow:0 0 10px gold}
-.nav{display:flex;flex-direction:column;gap:8px;margin-bottom:15px}
+.comment{border:1px solid #ff4500;border-radius:12px;padding:10px;margin:8px 0;background:rgba(255,69,0,.05)}
+.comment .owner{color:#00ffff;font-weight:bold;text-shadow:0 0 5px #00ffff;margin-bottom:3px}
+.nav{display:flex;flex-direction:column;gap:12px;margin-bottom:15px}
 .footer{text-align:center;font-size:13px;opacity:.8;margin-top:10px}
 </style>
 </head>
 <body>
-<video class="bg" autoplay muted loop><source src="https://cdn.coverr.co/videos/coverr-soldier-running-through-smoke-1576/1080p.mp4"></video>
+<video class="bg" autoplay muted loop>
+<source src="https://cdn.coverr.co/videos/coverr-soldier-running-through-smoke-1576/1080p.mp4">
+</video>
 <div class="overlay"></div>
 <div class="fire"></div>
 
 <div class="container">
 <h1>🔥 PMGC 🔥</h1>
 
-<!-- Navigation -->
+<!-- Home -->
 <div id="home" class="page">
 <div class="nav">
 <button onclick="go('apply')">🎮 التقديم</button>
 <button onclick="go('results');renderResults()">🏆 النتائج</button>
+<button onclick="go('comments');renderComments()">💬 التعليقات</button>
 <button onclick="go('admin')">🔐 لوحة التحكم</button>
 </div>
 </div>
@@ -56,7 +61,17 @@ button:hover{transform:scale(1.05)}
 </div>
 
 <!-- Results -->
-<div id="results" class="page"><div id="resultsBox"></div>
+<div id="results" class="page">
+<div id="resultsBox"></div>
+<button onclick="go('home')">رجوع</button>
+</div>
+
+<!-- Comments -->
+<div id="comments" class="page">
+<h2>💬 التعليقات</h2>
+<div id="commentsBox"></div>
+<textarea id="newComment" placeholder="اكتب تعليقك هنا"></textarea>
+<button onclick="addComment()">أرسل التعليق</button>
 <button onclick="go('home')">رجوع</button>
 </div>
 
@@ -80,7 +95,7 @@ button:hover{transform:scale(1.05)}
 function go(p){document.querySelectorAll('.page').forEach(x=>x.style.display='none');document.getElementById(p).style.display='block'}
 go('home');
 
-/* بيانات اللاعبين */
+/* Apply */
 function apply(){
 let n=name.value.trim(),i=pid.value.trim(),r=room.value;if(!n||!i){alert("اكمل البيانات");return;}
 let players=JSON.parse(localStorage.getItem("pmgc")||"[]");
@@ -90,22 +105,53 @@ window.open(`https://wa.me/2001270382949?text=${encodeURIComponent(`🔥 PMGC �
 name.value=pid.value="";confetti();
 }
 
-/* عرض النتائج */
+/* Results */
 function renderResults(){
 let box=document.getElementById("resultsBox");box.innerHTML="<h2 style='text-align:center'>🏆 النتائج</h2>";
 let p=JSON.parse(localStorage.getItem("pmgc")||"[]");p.sort((a,b)=>b.points-a.points);
 p.forEach((x,i)=>{box.innerHTML+=`<div class="card ${i==0?'first':''}">${i==0?'👑 المركز الأول':''}<p>${x.name}</p><p>${x.room}</p><p>${x.points} نقطة</p></div>`});
 }
 
-/* Admin */
-const ADMIN_PASS="PMGC_ADMIN";const MOD_PASS="PMGC_MOD";
-function loginAdmin(){let p=pass.value.trim();if(p===ADMIN_PASS||p===MOD_PASS){document.getElementById("adminPanel").style.display='block';pass.value='';renderAdmin()}else alert("كلمة سر خطأ")}
-function logoutAdmin(){document.getElementById("adminPanel").style.display='none'}
-function renderAdmin(){let box=document.getElementById("adminBox");box.innerHTML="";let p=JSON.parse(localStorage.getItem("pmgc")||"[]");p.forEach((x,i)=>{box.innerHTML+=`<div class="card">${i+1}. ${x.name} | ${x.room} | ${x.points} نقطة</div>`})}
+/* Comments */
+let fakeComments=[
+{user:"أحمد من مصر",text:"نفسي ترد عليا مستفز"},
+{user:"منى من مصر",text:"الاداء حلو"},
+{user:"سامي من مصر",text:"يارب أكسب"},
+{user:"user1",text:"مش لاقي روم"},
+{user:"user2",text:"امتى النتيجة؟"}
+];
 
-/* Confetti */
+function renderComments(){
+let box=document.getElementById("commentsBox");
+box.innerHTML="";
+let comments=JSON.parse(localStorage.getItem("pmgcComments")||"[]");
+let all=[...fakeComments,...comments];
+all.forEach(c=>{
+let owner=c.user==="المستفز"?`<span class="owner">👑 ${c.user}</span>`:`<strong>${c.user}</strong>`;
+let text=c.user==="المستفز"?`حبيبي يا قلبي`:`${c.text}`;
+box.innerHTML+=`<div class="comment">${owner}<p>${text}</p></div>`;
+});
+}
+
+function addComment(){
+let txt=document.getElementById("newComment").value.trim();
+if(!txt)return;
+let comments=JSON.parse(localStorage.getItem("pmgcComments")||"[]");
+comments.push({user:"مستخدم",text:txt});
+localStorage.setItem("pmgcComments",JSON.stringify(comments));
+document.getElementById("newComment").value="";
+renderComments();
+}
+
+/* Auto reply by المستفز */
 function confetti(){for(let i=0;i<40;i++){let d=document.createElement("div");d.style.position="fixed";d.style.left=Math.random()*100+"%";d.style.top="-10px";d.style.width="8px";d.style.height="8px";d.style.background=["#ff4500","#ffd700","#ff0000"][i%3];d.style.animation="fall 2s linear";document.body.appendChild(d);setTimeout(()=>d.remove(),2000)}}
 let s=document.createElement("style");s.innerHTML="@keyframes fall{to{transform:translateY(110vh)}}";document.head.appendChild(s);
+
+/* Admin */
+const ADMIN_PASS="PMGC_ADMIN";
+function loginAdmin(){let p=pass.value.trim();if(p===ADMIN_PASS){document.getElementById("adminPanel").style.display='block';pass.value='';renderAdmin()}else alert("كلمة سر خطأ")}
+function logoutAdmin(){document.getElementById("adminPanel").style.display='none'}
+function renderAdmin(){let box=document.getElementById("adminBox");box.innerHTML="";let p=JSON.parse(localStorage.getItem("pmgc")||"[]");p.forEach((x,i)=>{box.innerHTML+=`<div class="card">${i+1}. ${x.name} | ${x.room} | ${x.points} نقطة</div>`})}
 </script>
 </body>
 </html>
