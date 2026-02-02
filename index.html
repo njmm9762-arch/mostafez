@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PMGC Official</title>
+
+<style>
+*{box-sizing:border-box;font-family:Cairo,sans-serif}
+body{margin:0;background:#000;color:#fff}
+video{position:fixed;inset:0;width:100%;height:100%;object-fit:cover;z-index:-2}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:-1}
+
+.container{max-width:420px;margin:20px auto;padding:20px;
+background:rgba(10,10,10,.8);border-radius:20px;
+box-shadow:0 0 25px #ff4500}
+
+h1{text-align:center;color:#ff4500}
+
+input,select,button{
+width:100%;padding:12px;margin:6px 0;
+border-radius:12px;border:none;font-size:15px
+}
+input,select{background:#111;color:#fff;border:1px solid #ff4500}
+button{background:linear-gradient(135deg,#ff4500,#ff9900);font-weight:bold}
+
+.hidden{display:none}
+
+.fire{
+position:fixed;bottom:0;left:0;width:100%;height:120px;
+background:url('https://i.imgur.com/8Qf4JQF.gif') repeat-x;
+opacity:.7;pointer-events:none
+}
+
+.card{border:1px solid #ff4500;border-radius:12px;padding:10px;margin:10px 0}
+.first{color:gold;font-weight:bold}
+
+nav button{margin-top:10px}
+</style>
+</head>
+
+<body>
+
+<video autoplay muted loop>
+<source src="https://cdn.coverr.co/videos/coverr-battlefield-smoke-1574/1080p.mp4">
+</video>
+<div class="overlay"></div>
+<div class="fire"></div>
+
+<div class="container">
+
+<h1>🔥 PMGC 🔥</h1>
+
+<nav>
+<button onclick="show('apply')">🎮 التقديم</button>
+<button onclick="show('results')">🏆 النتائج</button>
+<button onclick="adminLogin()">🔐 لوحة التحكم</button>
+</nav>
+
+<!-- التقديم -->
+<div id="apply">
+<input id="name" placeholder="اسم اللاعب">
+<input id="pid" placeholder="ID">
+<select id="room">
+<option>Room 1</option>
+<option>Room 2</option>
+<option>Room 3</option>
+<option>Room 4</option>
+</select>
+<button onclick="apply()">تقديم & واتساب</button>
+</div>
+
+<!-- النتائج -->
+<div id="results" class="hidden"></div>
+
+<!-- لوحة التحكم -->
+<div id="admin" class="hidden">
+<h3>لوحة التحكم</h3>
+<button onclick="renderResults()">تحديث النتائج</button>
+</div>
+
+</div>
+
+<script>
+const ADMIN_PASS="PMGC_ADMIN";
+const MOD_PASS="PMGC_MOD";
+const PHONE="2001270382949";
+
+function show(id){
+document.querySelectorAll('#apply,#results,#admin')
+.forEach(x=>x.classList.add('hidden'));
+document.getElementById(id).classList.remove('hidden');
+}
+
+function apply(){
+const name=nameInput.value=name.value.trim();
+const pidv=pid.value.trim();
+const roomv=room.value;
+if(!name||!pidv)return alert("كمل البيانات");
+
+let data=JSON.parse(localStorage.getItem("players")||"[]");
+let points=10+Math.floor(Math.random()*10);
+
+data.push({name:name,id:pidv,room:roomv,points});
+localStorage.setItem("players",JSON.stringify(data));
+
+let msg=`🔥 تسجيل PMGC 🔥
+الاسم: ${name}
+ID: ${pidv}
+الروم: ${roomv}
+النقاط: ${points}`;
+
+window.open(`https://wa.me/${PHONE}?text=${encodeURIComponent(msg)}`);
+
+name.value=pid.value="";
+confetti();
+}
+
+function renderResults(){
+let box=document.getElementById("results");
+box.innerHTML="<h3>🏆 النتائج</h3>";
+let data=JSON.parse(localStorage.getItem("players")||"[]");
+data.sort((a,b)=>b.points-a.points);
+data.forEach((p,i)=>{
+box.innerHTML+=`
+<div class="card ${i==0?'first':''}">
+${i==0?'👑 المركز الأول':''}
+<p>الاسم: ${p.name}</p>
+<p>الروم: ${p.room}</p>
+<p>النقاط: ${p.points}</p>
+</div>`;
+});
+show('results');
+}
+
+function adminLogin(){
+let p=prompt("كلمة السر");
+if(p===ADMIN_PASS||p===MOD_PASS){
+show('admin');
+renderResults();
+}else alert("مرفوض");
+}
+
+/* confetti */
+function confetti(){
+for(let i=0;i<30;i++){
+let d=document.createElement("div");
+d.style.position="fixed";
+d.style.left=Math.random()*100+"%";
+d.style.top="-10px";
+d.style.width=d.style.height="8px";
+d.style.background=["red","yellow","orange"][i%3];
+d.style.animation="fall 2s linear";
+document.body.appendChild(d);
+setTimeout(()=>d.remove(),2000);
+}
+}
+
+const style=document.createElement("style");
+style.innerHTML="@keyframes fall{to{transform:translateY(100vh)}}";
+document.head.appendChild(style);
+</script>
+
+</body>
+</html>
