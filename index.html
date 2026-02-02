@@ -18,12 +18,14 @@ input,select,textarea{background:#111;color:#fff;border:1px solid #ff4500}
 button{background:linear-gradient(135deg,#ff4500,#ffae00);font-weight:900;color:#000;cursor:pointer;transition:.3s}
 button:hover{transform:scale(1.05)}
 .page{display:none}
-.card{border:1px solid #ff4500;border-radius:15px;padding:12px;margin:10px 0;background:rgba(255,69,0,.08);position:relative}
-.first{color:#ffd700;text-shadow:0 0 10px gold}
-.comment{border:1px solid #ff4500;border-radius:12px;padding:10px;margin:8px 0;background:rgba(255,69,0,.05);position:relative}
+.card, .comment{border:1px solid #ff4500;border-radius:15px;padding:12px;margin:10px 0;background:rgba(255,69,0,.08);position:relative;animation:fadeIn 0.7s ease}
+@keyframes fadeIn{from{opacity:0;transform:scale(0.8)}to{opacity:1;transform:scale(1)}}
 .comment .owner{color:#00ffff;font-weight:bold;text-shadow:0 0 5px #00ffff;margin-bottom:3px;display:inline-block;position:relative}
 .comment .badge{position:absolute;top:-10px;right:-10px;background:#ff0;color:#000;padding:2px 6px;border-radius:12px;font-size:12px;animation:slideBadge 2s infinite alternate}
 @keyframes slideBadge{0%{transform:translateX(0)}100%{transform:translateX(-10px)}}
+.comment audio{margin-top:5px;width:100%}
+.sticker{position:absolute;width:35px;height:35px;animation:stickerAnim 1s ease;pointer-events:none}
+@keyframes stickerAnim{0%{transform:scale(0)}50%{transform:scale(1.3)}100%{transform:scale(1)}}
 .nav{display:flex;flex-direction:column;gap:12px;margin-bottom:15px}
 .footer{text-align:center;font-size:13px;opacity:.8;margin-top:10px}
 </style>
@@ -73,10 +75,17 @@ button:hover{transform:scale(1.05)}
 <!-- Comments -->
 <div id="comments" class="page">
 <h2>💬 التعليقات</h2>
-<div id="commentsBox"></div>
+<div id="commentsBox" style="position:relative"></div>
 <input id="commentName" placeholder="اسمك">
 <input id="commentEdu" placeholder="التعليم">
 <textarea id="newComment" placeholder="اكتب تعليقك هنا"></textarea>
+<input type="file" id="commentAudio" accept="audio/*">
+<select id="sticker">
+<option>🔥</option>
+<option>💥</option>
+<option>🌟</option>
+<option>❤️</option>
+</select>
 <button onclick="addComment()">أرسل التعليق</button>
 <button onclick="go('home')">رجوع</button>
 </div>
@@ -106,7 +115,8 @@ function apply(){
 let n=name.value.trim(),i=pid.value.trim(),r=room.value,rankVal=rank.value,pingVal=ping.value;
 if(!n||!i||!rankVal||!pingVal){alert("اكمل كل البيانات");return;}
 let players=JSON.parse(localStorage.getItem("pmgc")||"[]");
-let points=10+Math.floor(Math.random()*10);players.push({name:n,id:i,room:r,rank:rankVal,ping:pingVal,points});
+let points=10+Math.floor(Math.random()*10);
+players.push({name:n,id:i,room:r,rank:rankVal,ping:pingVal,points});
 localStorage.setItem("pmgc",JSON.stringify(players));
 let waText=`🔥 PMGC 🔥\nالاسم: ${n}\nID: ${i}\nالرنك: ${rankVal}\nالبنج: ${pingVal}\nالروم: ${r}\nالنقاط: ${points}`;
 window.open(`https://wa.me/2001270382949?text=${encodeURIComponent(waText)}`);
@@ -127,19 +137,20 @@ let fakeComments=[
 {user:"منى من مصر",edu:"جامعة",text:"الاداء حلو"},
 {user:"سامي من مصر",edu:"ثانوي",text:"يارب أكسب"}
 ];
-
 const OWNER="المستفز"; // اسم المالك
 
 function renderComments(){
-let box=document.getElementById("commentsBox");
-box.innerHTML="";
+let box=document.getElementById("commentsBox");box.innerHTML="";
 let comments=JSON.parse(localStorage.getItem("pmgcComments")||"[]");
 let all=[...fakeComments,...comments];
 all.forEach(c=>{
 let badge=c.user===OWNER?`<span class="badge">👑 ملك الموقع</span>`:"";
 let ownerName=c.user===OWNER?`<span class="owner">${c.user} ${badge}</span>`:`<strong>${c.user} (${c.edu})</strong>`;
 let text=c.user===OWNER?`حبيبي يا قلبي ❤️`:`${c.text}`;
-box.innerHTML+=`<div class="comment">${ownerName}<p>${text}</p></div>`;
+let audioHTML=c.audio?`<audio controls src="${c.audio}"></audio>`:"";
+box.innerHTML+=`<div class="comment" style="position:relative">${ownerName}<p>${text}</p>${audioHTML}</div>`;
+if(c.sticker){let s=document.createElement("div");s.className="sticker";s.innerText=c.sticker;let rect=box.lastChild.getBoundingClientRect();s.style.top=rect.top+window.scrollY+"px";s.style.left=(rect.left+100)+"px";document.body.appendChild(s);setTimeout(()=>s.remove(),1200)}
+if(c.user===OWNER && c.text){speechSynthesis.speak(new SpeechSynthesisUtterance(c.text))};
 });
 }
 
@@ -147,13 +158,17 @@ function addComment(){
 let n=document.getElementById("commentName").value.trim();
 let e=document.getElementById("commentEdu").value.trim();
 let t=document.getElementById("newComment").value.trim();
-if(!n||!e||!t){alert("اكمل كل البيانات");return;}
+let f=document.getElementById("commentAudio").files[0];
+let st=document.getElementById("sticker").value;
+if(!n||!e){alert("اكمل الاسم والتعليم");return;}
+let audioURL=f?URL.createObjectURL(f):null;
 let comments=JSON.parse(localStorage.getItem("pmgcComments")||"[]");
-comments.push({user:n,edu:e,text:t});
+comments.push({user:n,edu:e,text:t,audio:audioURL,sticker:st});
 localStorage.setItem("pmgcComments",JSON.stringify(comments));
 document.getElementById("commentName").value="";
 document.getElementById("commentEdu").value="";
 document.getElementById("newComment").value="";
+document.getElementById("commentAudio").value="";
 renderComments();
 }
 
