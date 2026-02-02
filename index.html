@@ -10,7 +10,7 @@ body{background:#000;color:#fff;overflow-x:hidden}
 video.bg{position:fixed;inset:0;width:100%;height:100%;object-fit:cover;z-index:-3}
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:-2}
 .fire{position:fixed;bottom:0;left:0;width:100%;height:150px;background:url("https://i.imgur.com/8Qf4JQF.gif") repeat-x;opacity:.8;z-index:2;pointer-events:none}
-.container{max-width:430px;margin:20px auto;padding:20px;background:linear-gradient(180deg,rgba(20,20,20,.95),rgba(0,0,0,.95));border-radius:25px;border:2px solid #ff4500;box-shadow:0 0 30px #ff4500,0 0 80px #ff0000;animation:zoom 1s ease}
+.container{max-width:450px;margin:20px auto;padding:20px;background:linear-gradient(180deg,rgba(20,20,20,.95),rgba(0,0,0,.95));border-radius:25px;border:2px solid #ff4500;box-shadow:0 0 35px #ff4500,0 0 100px #ff0000;animation:zoom 1s ease}
 @keyframes zoom{from{transform:scale(.9);opacity:0}to{transform:scale(1);opacity:1}}
 h1{text-align:center;font-size:32px;color:#ffae00;text-shadow:0 0 10px #ff4500,0 0 30px #ff0000;margin-bottom:20px}
 input,select,button,textarea{width:100%;padding:12px;margin:8px 0;border-radius:12px;border:none;font-size:15px}
@@ -18,10 +18,12 @@ input,select,textarea{background:#111;color:#fff;border:1px solid #ff4500}
 button{background:linear-gradient(135deg,#ff4500,#ffae00);font-weight:900;color:#000;cursor:pointer;transition:.3s}
 button:hover{transform:scale(1.05)}
 .page{display:none}
-.card{border:1px solid #ff4500;border-radius:15px;padding:12px;margin:10px 0;background:rgba(255,69,0,.08)}
+.card{border:1px solid #ff4500;border-radius:15px;padding:12px;margin:10px 0;background:rgba(255,69,0,.08);position:relative}
 .first{color:#ffd700;text-shadow:0 0 10px gold}
-.comment{border:1px solid #ff4500;border-radius:12px;padding:10px;margin:8px 0;background:rgba(255,69,0,.05)}
-.comment .owner{color:#00ffff;font-weight:bold;text-shadow:0 0 5px #00ffff;margin-bottom:3px}
+.comment{border:1px solid #ff4500;border-radius:12px;padding:10px;margin:8px 0;background:rgba(255,69,0,.05);position:relative}
+.comment .owner{color:#00ffff;font-weight:bold;text-shadow:0 0 5px #00ffff;margin-bottom:3px;display:inline-block;position:relative}
+.comment .badge{position:absolute;top:-10px;right:-10px;background:#ff0;color:#000;padding:2px 6px;border-radius:12px;font-size:12px;animation:slideBadge 2s infinite alternate}
+@keyframes slideBadge{0%{transform:translateX(0)}100%{transform:translateX(-10px)}}
 .nav{display:flex;flex-direction:column;gap:12px;margin-bottom:15px}
 .footer{text-align:center;font-size:13px;opacity:.8;margin-top:10px}
 </style>
@@ -50,6 +52,8 @@ button:hover{transform:scale(1.05)}
 <div id="apply" class="page">
 <input id="name" placeholder="اسم اللاعب">
 <input id="pid" placeholder="ID اللاعب">
+<input id="rank" placeholder="الرنك">
+<input id="ping" placeholder="البنج">
 <select id="room">
 <option>Room 1</option>
 <option>Room 2</option>
@@ -70,6 +74,8 @@ button:hover{transform:scale(1.05)}
 <div id="comments" class="page">
 <h2>💬 التعليقات</h2>
 <div id="commentsBox"></div>
+<input id="commentName" placeholder="اسمك">
+<input id="commentEdu" placeholder="التعليم">
 <textarea id="newComment" placeholder="اكتب تعليقك هنا"></textarea>
 <button onclick="addComment()">أرسل التعليق</button>
 <button onclick="go('home')">رجوع</button>
@@ -97,29 +103,32 @@ go('home');
 
 /* Apply */
 function apply(){
-let n=name.value.trim(),i=pid.value.trim(),r=room.value;if(!n||!i){alert("اكمل البيانات");return;}
+let n=name.value.trim(),i=pid.value.trim(),r=room.value,rankVal=rank.value,pingVal=ping.value;
+if(!n||!i||!rankVal||!pingVal){alert("اكمل كل البيانات");return;}
 let players=JSON.parse(localStorage.getItem("pmgc")||"[]");
-let points=10+Math.floor(Math.random()*10);players.push({name:n,id:i,room:r,points});
+let points=10+Math.floor(Math.random()*10);players.push({name:n,id:i,room:r,rank:rankVal,ping:pingVal,points});
 localStorage.setItem("pmgc",JSON.stringify(players));
-window.open(`https://wa.me/2001270382949?text=${encodeURIComponent(`🔥 PMGC 🔥\nالاسم: ${n}\nID: ${i}\nالروم: ${r}\nالنقاط: ${points}`)}`);
-name.value=pid.value="";confetti();
+let waText=`🔥 PMGC 🔥\nالاسم: ${n}\nID: ${i}\nالرنك: ${rankVal}\nالبنج: ${pingVal}\nالروم: ${r}\nالنقاط: ${points}`;
+window.open(`https://wa.me/2001270382949?text=${encodeURIComponent(waText)}`);
+name.value=pid.value=rank.value=ping.value="";
+confetti();
 }
 
 /* Results */
 function renderResults(){
 let box=document.getElementById("resultsBox");box.innerHTML="<h2 style='text-align:center'>🏆 النتائج</h2>";
 let p=JSON.parse(localStorage.getItem("pmgc")||"[]");p.sort((a,b)=>b.points-a.points);
-p.forEach((x,i)=>{box.innerHTML+=`<div class="card ${i==0?'first':''}">${i==0?'👑 المركز الأول':''}<p>${x.name}</p><p>${x.room}</p><p>${x.points} نقطة</p></div>`});
+p.forEach((x,i)=>{box.innerHTML+=`<div class="card ${i==0?'first':''}">${i==0?'👑 المركز الأول':''}<p>${x.name}</p><p>${x.room}</p><p>${x.rank} | ${x.ping}</p><p>${x.points} نقطة</p></div>`});
 }
 
 /* Comments */
 let fakeComments=[
-{user:"أحمد من مصر",text:"نفسي ترد عليا مستفز"},
-{user:"منى من مصر",text:"الاداء حلو"},
-{user:"سامي من مصر",text:"يارب أكسب"},
-{user:"user1",text:"مش لاقي روم"},
-{user:"user2",text:"امتى النتيجة؟"}
+{user:"أحمد من مصر",edu:"ثانوي",text:"نفسي ترد عليا مستفز"},
+{user:"منى من مصر",edu:"جامعة",text:"الاداء حلو"},
+{user:"سامي من مصر",edu:"ثانوي",text:"يارب أكسب"}
 ];
+
+const OWNER="المستفز"; // اسم المالك
 
 function renderComments(){
 let box=document.getElementById("commentsBox");
@@ -127,31 +136,36 @@ box.innerHTML="";
 let comments=JSON.parse(localStorage.getItem("pmgcComments")||"[]");
 let all=[...fakeComments,...comments];
 all.forEach(c=>{
-let owner=c.user==="المستفز"?`<span class="owner">👑 ${c.user}</span>`:`<strong>${c.user}</strong>`;
-let text=c.user==="المستفز"?`حبيبي يا قلبي`:`${c.text}`;
-box.innerHTML+=`<div class="comment">${owner}<p>${text}</p></div>`;
+let badge=c.user===OWNER?`<span class="badge">👑 ملك الموقع</span>`:"";
+let ownerName=c.user===OWNER?`<span class="owner">${c.user} ${badge}</span>`:`<strong>${c.user} (${c.edu})</strong>`;
+let text=c.user===OWNER?`حبيبي يا قلبي ❤️`:`${c.text}`;
+box.innerHTML+=`<div class="comment">${ownerName}<p>${text}</p></div>`;
 });
 }
 
 function addComment(){
-let txt=document.getElementById("newComment").value.trim();
-if(!txt)return;
+let n=document.getElementById("commentName").value.trim();
+let e=document.getElementById("commentEdu").value.trim();
+let t=document.getElementById("newComment").value.trim();
+if(!n||!e||!t){alert("اكمل كل البيانات");return;}
 let comments=JSON.parse(localStorage.getItem("pmgcComments")||"[]");
-comments.push({user:"مستخدم",text:txt});
+comments.push({user:n,edu:e,text:t});
 localStorage.setItem("pmgcComments",JSON.stringify(comments));
+document.getElementById("commentName").value="";
+document.getElementById("commentEdu").value="";
 document.getElementById("newComment").value="";
 renderComments();
 }
 
-/* Auto reply by المستفز */
-function confetti(){for(let i=0;i<40;i++){let d=document.createElement("div");d.style.position="fixed";d.style.left=Math.random()*100+"%";d.style.top="-10px";d.style.width="8px";d.style.height="8px";d.style.background=["#ff4500","#ffd700","#ff0000"][i%3];d.style.animation="fall 2s linear";document.body.appendChild(d);setTimeout(()=>d.remove(),2000)}}
+/* Confetti */
+function confetti(){for(let i=0;i<40;i++){let d=document.createElement("div");d.style.position="fixed";d.style.left=Math.random()*100+"%";d.style.top="-10px";d.style.width="8px";d.style.height="8px";d.style.background=["#ff4500","#ffd700","#ff0000"][i%3];d.style.animation="fall 2s linear";document.body.appendChild(d);setTimeout(()=>d.remove(),2000))}}
 let s=document.createElement("style");s.innerHTML="@keyframes fall{to{transform:translateY(110vh)}}";document.head.appendChild(s);
 
 /* Admin */
 const ADMIN_PASS="PMGC_ADMIN";
 function loginAdmin(){let p=pass.value.trim();if(p===ADMIN_PASS){document.getElementById("adminPanel").style.display='block';pass.value='';renderAdmin()}else alert("كلمة سر خطأ")}
 function logoutAdmin(){document.getElementById("adminPanel").style.display='none'}
-function renderAdmin(){let box=document.getElementById("adminBox");box.innerHTML="";let p=JSON.parse(localStorage.getItem("pmgc")||"[]");p.forEach((x,i)=>{box.innerHTML+=`<div class="card">${i+1}. ${x.name} | ${x.room} | ${x.points} نقطة</div>`})}
+function renderAdmin(){let box=document.getElementById("adminBox");box.innerHTML="";let p=JSON.parse(localStorage.getItem("pmgc")||"[]");p.forEach((x,i)=>{box.innerHTML+=`<div class="card">${i+1}. ${x.name} | ${x.room} | ${x.rank} | ${x.ping} | ${x.points} نقطة</div>`})}
 </script>
 </body>
 </html>
